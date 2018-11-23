@@ -1,16 +1,31 @@
 (ns tinter.core
   (:require [clojure.string :as str]
-            [clojure.contrib.generic.math-functions :as mathfn]
-            [clojure.math.numeric-tower :as math]))
+            #+clj
+            [clojure.math.numeric-tower :as math]
+            #+cljs
+            [goog.string :as gstring]
+            #+cljs
+            [goog.string.format]))
 
+(defn format [s & args]
+  #+clj
+  (apply clojure.core/format s args)
+  #+cljs
+  (apply gstring/format s args))
 
 (def PI 3.141592654)
 
+(defn abs [n]
+  #+clj
+  (math/abs n)
+  #+cljs
+  (.abs js/Math n))
  
 (defn hex-str-to-dec
   "Convert hex RGB triples to decimal."
   [s]
-  (map (comp #(Integer/parseInt % 16)
+  (map (comp #(#+clj  Integer/parseInt
+               #+cljs js/parseInt % 16)
              (partial apply str))
        (partition 2 s)))
 
@@ -101,7 +116,7 @@
   (let [c (chroma ls)]
     (if (< c 0.0001)
       0
-      (/ c (- 1 (math/abs (- (* 2 (lightness ls)) 1)))))))
+      (/ c (- 1 (abs (- (* 2 (lightness ls)) 1)))))))
 
 
 (defn rgb-to-hsl
@@ -134,7 +149,7 @@
   (let [h (first ls)
         s (second ls)
         l (nth ls 2)]
-  (* s (- 1 (math/abs (- (* 2 l) 1))))))
+  (* s (- 1 (abs (- (* 2 l) 1))))))
 
 
 (defn hsv-to-rgb
@@ -146,7 +161,7 @@
           v (nth ls 2)
           h' (/ h 60.0)
           c (hsv-chroma ls)
-          x (* c (- 1 (math/abs (- (mod h' 2) 1))))
+          x (* c (- 1 (abs (- (mod h' 2) 1))))
           m (- v c)]
       (map #(+ m %) (cond
         (nil? h) [0, 0, 0]
@@ -167,7 +182,7 @@
           l (nth ls 2)
           h' (/ h 60.0)
           c (hsl-chroma ls)
-          x (* c (- 1.0 (math/abs (- (mod h' 2) 1.0))))
+          x (* c (- 1.0 (abs (- (mod h' 2) 1.0))))
           m (- l (* 0.5 c))]
       (map #(+ m %) (cond
         (nil? h) [0, 0, 0]
